@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#191C33">
+<title>Moon Lamp</title>
+<style>
+:root{
+  --night:#191C33; --dusk:#22264A; --rim:#343A62; --silver:#ECE7D8; --haze:#A0A6C8; --warn:#FFB4A6;
+  --lit:236,231,216;            /* the lamp's own colour right now, set from the page */
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark;background:var(--night)}
+body{margin:0;min-height:100vh;color:var(--silver);font:16px/1.5 var(--sans);-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(110% 55% at 50% 0%,rgba(var(--lit),.15),transparent 62%) no-repeat,var(--night)}
+main,.sheet-in{max-width:460px;margin:0 auto;padding:20px 20px 56px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid rgb(var(--lit));outline-offset:3px}
+
+/* the moon */
+.hero{text-align:center;padding:4px 0 22px}
+.stage{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 14px}
+.step{flex:0 0 44px;height:44px;border-radius:50%;border:1px solid var(--rim);background:none;color:var(--haze);display:grid;place-items:center}
+.step:hover{color:var(--silver);border-color:var(--haze)}
+.strip{position:relative;height:30px;margin:0 6px;cursor:pointer;touch-action:none}
+.strip i{position:absolute;top:12px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:rgb(var(--lit))}
+.strip .tonight{position:absolute;top:6px;width:18px;height:18px;margin-left:-9px;border-radius:50%;border:1.5px solid var(--haze)}
+.strip .at{position:absolute;top:9px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:rgb(var(--lit));box-shadow:0 0 10px rgba(var(--lit),.8)}
+.strip-labels{display:flex;justify-content:space-between;color:var(--haze);font-size:13px;margin:0 0 18px}
+.moon{width:min(58vw,250px);aspect-ratio:1;margin:0;border-radius:50%;cursor:grab;touch-action:pan-y;
+  filter:drop-shadow(0 0 38px rgba(var(--lit),.32));outline-offset:8px}
+.moon:active{cursor:grabbing}
+.moon svg{display:block;width:100%;height:100%}
+h1{font:400 38px/1.12 var(--serif);margin:0;letter-spacing:.005em}
+.quiet{color:var(--haze);margin:6px 0 0;font-size:15px}
+.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:14px;min-height:42px;align-items:center}
+.pill{background:none;border:1px solid var(--rim);border-radius:999px;padding:8px 18px}
+.pill.primary{background:var(--silver);border-color:var(--silver);color:var(--night);font-weight:600}
+.bar{width:140px;height:3px;border-radius:2px;background:var(--rim);overflow:hidden}
+.bar i{display:block;height:100%;background:rgb(var(--lit));animation:runout var(--t) linear forwards}
+@keyframes runout{from{width:100%}to{width:0}}
+@media (prefers-reduced-motion:reduce){.bar i{animation:none}}
+.link{background:none;border:0;padding:6px 2px;color:var(--haze);text-decoration:underline;text-decoration-color:var(--rim);text-underline-offset:4px}
+
+/* main controls */
+.block{padding:18px 0;border-top:1px solid var(--rim)}
+.label{display:block;font-size:16px;font-weight:600;line-height:1.5;margin:0 0 10px}
+.power{display:flex;align-items:center;gap:16px}
+.power-btn{flex:0 0 auto;width:56px;height:56px;border-radius:50%;border:1px solid var(--rim);background:var(--dusk);display:grid;place-items:center}
+.power-btn[aria-pressed=true]{background:rgb(var(--lit));border-color:transparent;color:var(--night);box-shadow:0 0 26px rgba(var(--lit),.45)}
+.power-state{font:400 24px/1.15 var(--serif)}
+.power .link{padding:2px 0;text-align:left}
+input[type=range]{width:100%;accent-color:rgb(var(--lit));margin:6px 0}
+.swatches{display:flex;gap:6px;overflow-x:auto;padding:6px 2px 4px;margin:0 -2px;scroll-snap-type:x proximity;scrollbar-width:none}
+.swatches::-webkit-scrollbar{display:none}
+@media (hover:hover) and (pointer:fine){.swatches{flex-wrap:wrap;overflow:visible;row-gap:12px}}
+.sw{flex:0 0 68px;display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:0;padding:4px 0;scroll-snap-align:start;color:var(--haze);font-size:13px;line-height:1.2}
+.sw i{width:46px;height:46px;border-radius:50%;display:block;box-shadow:inset -7px -5px 12px rgba(0,0,0,.28);outline:2px solid transparent;outline-offset:3px}
+.sw[aria-pressed=true]{color:var(--silver)}
+.sw[aria-pressed=true] i{outline-color:rgb(var(--lit))}
+/* a ring that runs down around a swatch while the lamp shows it off */
+@property --left{syntax:'<angle>';inherits:false;initial-value:0deg}
+.sw i{position:relative}
+.sw.glancing i::after{content:"";position:absolute;inset:-7px;border-radius:50%;
+  background:conic-gradient(rgb(var(--lit)) var(--left),transparent 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  animation:countdown var(--t) linear forwards}
+@keyframes countdown{from{--left:360deg}to{--left:0deg}}
+@media (prefers-reduced-motion:reduce){.sw.glancing i::after{animation:none;--left:360deg}}
+.glance-note{margin:2px 0 0;min-height:1.5em}
+.sw .add{box-shadow:none;border:1.5px dashed var(--haze);background:none}
+.check{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+input[type=checkbox]{width:22px;height:22px;accent-color:rgb(var(--lit))}
+nav.more{margin-top:8px;border-top:1px solid var(--rim)}
+nav.more button{display:flex;align-items:baseline;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid var(--rim);padding:15px 0;text-align:left}
+nav.more button span{flex:1;color:var(--haze);font-size:14px;text-align:right}
+nav.more button::after{content:"›";color:var(--haze)}
+
+/* full-screen panels */
+.sheet{position:fixed;inset:0;z-index:10;overflow-y:auto;background:var(--night);visibility:hidden;transform:translateY(100%);transition:transform .28s ease,visibility 0s .28s}
+.sheet.open{visibility:visible;transform:none;transition:transform .28s ease}
+.sheet header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 10px;background:var(--night)}
+.sheet h2{font:400 27px/1.2 var(--serif);margin:0}
+.field{padding:14px 0;border-bottom:1px solid var(--rim)}
+.field:last-child{border-bottom:0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row output{color:var(--haze);font-variant-numeric:tabular-nums;min-width:3.5em;text-align:right}
+.hint{color:var(--haze);font-size:14px;margin:6px 0 0}
+.warn{color:var(--warn)}
+input[type=text],input[type=password],input[type=number],input[type=time],select{font:inherit;color:inherit;background:var(--dusk);border:1px solid var(--rim);border-radius:10px;padding:9px 11px;min-width:0}
+input[type=text],input[type=password]{width:100%}
+input[type=number]{width:6em}
+input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim);border-radius:10px;background:none}
+.inline{display:flex;gap:8px;align-items:center}
+.nets{display:grid;gap:6px;margin-top:10px}
+.nets button{display:flex;justify-content:space-between;background:var(--dusk);border:1px solid var(--rim);border-radius:10px;padding:10px 12px;text-align:left}
+.nets span{color:var(--haze);font-size:14px}
+.grid{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
+.done-box{border:1px solid rgb(var(--lit));border-radius:14px;padding:16px;margin:14px 0}
+.done-box h3{font:400 24px/1.2 var(--serif);margin:0 0 6px}
+.done-box a{color:inherit}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));z-index:20;transform:translateX(-50%);max-width:calc(100% - 32px);
+  background:var(--dusk);border:1px solid var(--rim);border-radius:999px;padding:9px 18px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.bad{color:var(--warn);border-color:var(--warn);border-radius:14px}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet.open,.toast{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="stage">
+    <button class="step" id="prevNight" aria-label="Show the night before"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="moon" id="moon" role="slider" tabindex="0" aria-label="Moon phase. Drag, or use the arrow keys, to see other nights." aria-valuemin="0" aria-valuemax="100">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs><clipPath id="disc"><circle cx="60" cy="60" r="59"/></clipPath></defs>
+        <g clip-path="url(#disc)">
+          <g id="slices"><rect x="0" width="20" height="120"/><rect x="20" width="20" height="120"/><rect x="40" width="20" height="120"/><rect x="60" width="20" height="120"/><rect x="80" width="20" height="120"/><rect x="100" width="20" height="120"/></g>
+          <g fill="#000" opacity=".09"><circle cx="38" cy="40" r="11"/><circle cx="74" cy="30" r="6"/><circle cx="82" cy="72" r="13"/><circle cx="44" cy="84" r="7"/><circle cx="62" cy="56" r="4"/><circle cx="24" cy="66" r="5"/></g>
+          <g stroke="#000" stroke-opacity=".22" stroke-width=".8"><path d="M20 0V120M40 0V120M60 0V120M80 0V120M100 0V120"/></g>
+        </g>
+        <circle cx="60" cy="60" r="59" fill="none" stroke="#fff" stroke-opacity=".08"/>
+      </svg>
+    </div>
+    <button class="step" id="nextNight" aria-label="Show the night after"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="strip" id="strip" aria-hidden="true"><span class="tonight" id="tonightMark"></span><span class="at" id="atMark"></span></div>
+    <div class="strip-labels" aria-hidden="true"><span>New moon</span><span>Full moon</span><span>New moon</span></div>
+    <h1 id="pname">Moon lamp</h1>
+    <p class="quiet" id="pinfo">Connecting to the lamp…</p>
+    <div class="actions" id="actions"></div>
+  </header>
+
+  <section class="block power">
+    <button class="power-btn" id="power" aria-pressed="true" aria-label="Turn the lamp off">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>
+    </button>
+    <div>
+      <div class="power-state" id="powerState">On</div>
+      <button class="link" id="powerNote" data-open="schedule">No schedule</button>
+      <button class="link" id="powerAuto" hidden>Back to schedule</button>
+    </div>
+  </section>
+
+  <section class="block">
+    <label class="label" for="bright">Brightness</label>
+    <input type="range" id="bright" min="0" max="1" step="0.01">
+  </section>
+
+  <section class="block">
+    <h2 class="label">Moonlight</h2>
+    <div class="swatches" id="looks"></div>
+    <p class="hint glance-note" id="looksNote" aria-live="polite"></p>
+    <label class="check" id="motionRow"><span>Gentle motion</span><input type="checkbox" id="motion"></label>
+  </section>
+
+  <section class="block">
+    <h2 class="label">Dark side</h2>
+    <div class="swatches" id="glows"></div>
+    <p class="hint glance-note" id="glowsNote" aria-live="polite"></p>
+  </section>
+
+  <nav class="more">
+    <button data-open="schedule">Schedule and location<span id="nSchedule"></span></button>
+    <button data-open="glow">Dark side glow<span id="nGlow"></span></button>
+    <button data-open="calibrate">Calibrate LEDs<span></span></button>
+    <button data-open="wifi">Wi-Fi<span id="nWifi"></span></button>
+    <button data-open="lamp">Lamp<span id="nLamp"></span></button>
+  </nav>
+</main>
+
+<!-- Schedule and location -->
+<section class="sheet" id="sheet-schedule" aria-labelledby="h-schedule"><div class="sheet-in">
+  <header><h2 id="h-schedule">Schedule and location</h2><button class="pill" data-close>Done</button></header>
+  <div class="field"><label class="check"><span>Turn on and off by itself</span><input type="checkbox" id="sched"></label></div>
+  <div id="schedOpts">
+    <div class="field"><div class="row"><span>Turn on at</span><span class="inline"><select id="onKind"><option value="sunset">Sunset</option><option value="sunrise">Sunrise</option><option value="time">A set time</option></select><input type="time" id="onTime"></span></div>
+      <div class="row" id="onOffRow" style="margin-top:8px"><span class="hint" style="margin:0">Minutes after, or before if negative</span><input type="number" min="-240" max="240" step="5" id="onOff"></div></div>
+    <div class="field"><div class="row"><span>Turn off at</span><span class="inline"><select id="offKind"><option value="sunrise">Sunrise</option><option value="sunset">Sunset</option><option value="time">A set time</option></select><input type="time" id="offTime"></span></div>
+      <div class="row" id="offOffRow" style="margin-top:8px"><span class="hint" style="margin:0">Minutes after, or before if negative</span><input type="number" min="-240" max="240" step="5" id="offOff"></div></div>
+    <div class="field"><div class="row"><label for="fade">Fade in and out</label><output id="fadeOut"></output></div><input type="range" id="fade" min="0" max="60" step="1"></div>
+    <p class="hint warn" id="schedWarn"></p>
+  </div>
+  <div class="field">
+    <label class="label" for="place">Where the lamp is</label>
+    <input type="text" id="place" inputmode="decimal" autocomplete="off" placeholder="Latitude, longitude, e.g. 51.50, -0.13">
+    <p class="hint">Used for sunrise and sunset. In Google Maps, right-click your home and click the numbers at the top to copy them, then paste here.</p>
+    <p class="hint" id="sunLine"></p>
+  </div>
+  <div class="field">
+    <p style="margin:0" id="tzLine"></p>
+    <button class="link" id="tzUse" hidden></button>
+  </div>
+</div></section>
+
+<!-- Dark side glow -->
+<section class="sheet" id="sheet-glow" aria-labelledby="h-glow"><div class="sheet-in">
+  <header><h2 id="h-glow">Dark side glow</h2><button class="pill" data-close>Done</button></header>
+  <div class="field"><label class="check"><span>Glow on the dark side</span><input type="checkbox" id="glowOn"></label></div>
+  <div id="glowOpts">
+    <div class="field"><div class="row"><label for="glowStr">Strength, compared with the lit side</label><output id="glowStrOut"></output></div><input type="range" id="glowStr" min="0" max="1" step="0.01"></div>
+    <div class="field"><label class="check"><span>Only around sunrise and sunset</span><input type="checkbox" id="twi"></label>
+      <p class="hint">Like earthshine on the real moon: sunlight bounced off the Earth lights the dark side, easiest to see in twilight.</p>
+      <div id="twiOpts"><div class="row" style="margin-top:10px"><label for="twiMin">How long either side</label><output id="twiOut"></output></div><input type="range" id="twiMin" min="10" max="240" step="5"><p class="hint" id="twiNote"></p></div></div>
+    <div class="field"><span class="label">Your own colour</span>
+      <div class="row"><span>Colour LEDs</span><input type="color" id="glowRgb"></div>
+      <div class="row" style="margin-top:8px"><label for="glowW">White LED</label><output id="glowWOut"></output></div><input type="range" id="glowW" min="0" max="255" step="1"></div>
+  </div>
+</div></section>
+
+<!-- Moonlight colour -->
+<section class="sheet" id="sheet-colour" aria-labelledby="h-colour"><div class="sheet-in">
+  <header><h2 id="h-colour">Moonlight colour</h2><button class="pill" data-close>Done</button></header>
+  <div class="field"><div class="row"><label for="warmth">Warmth</label><output id="warmthOut"></output></div><input type="range" id="warmth" min="0" max="1" step="0.01">
+    <p class="hint">From bluish cool white, through the plain white LED, to amber.</p></div>
+  <div class="field"><span class="label">Mix it yourself</span>
+    <div class="row"><label for="litW">White LED</label><output id="litWOut"></output></div><input type="range" id="litW" min="0" max="255" step="1">
+    <div class="row" style="margin-top:8px"><span>Colour LEDs</span><input type="color" id="litRgb"></div>
+    <p class="hint">Each LED has a white light and red, green and blue lights. The colour is added on top of the white; black adds none. Turn the white down for a fully coloured moon.</p></div>
+</div></section>
+
+<!-- Calibrate -->
+<section class="sheet" id="sheet-calibrate" aria-labelledby="h-calibrate"><div class="sheet-in">
+  <header><h2 id="h-calibrate">Calibrate LEDs</h2><button class="pill" data-close>Done</button></header>
+  <div class="field"><div class="row"><label for="numLeds">LEDs on the strip</label><input type="number" id="numLeds" min="1" max="300"></div></div>
+  <div class="field"><div class="row"><span>Light one LED</span><span class="inline"><button class="pill" id="ledM" aria-label="Previous LED">−</button><input type="number" id="led" min="0" value="0" aria-label="LED number"><button class="pill" id="ledP" aria-label="Next LED">+</button></span></div>
+    <p class="hint">Step through the LEDs and note which chamber each one lights. Leave out any LED under a wall between chambers.</p></div>
+  <div class="field"><span class="label">LEDs in each chamber, left to right</span><div class="grid" id="chambers"></div>
+    <div class="actions" style="justify-content:flex-start"><button class="pill primary" id="setCh">Use these chambers</button><button class="pill" id="evenCh">Split evenly</button></div>
+    <label class="check"><span>First LED is on the left (for an even split)</span><input type="checkbox" id="led0Left"></label></div>
+  <div class="field"><span class="label">Chamber brightness</span><p class="hint" style="margin-top:0">Shows a full moon. Even out the chambers by eye.</p><div id="gains"></div></div>
+</div></section>
+
+<!-- Wi-Fi -->
+<section class="sheet" id="sheet-wifi" aria-labelledby="h-wifi"><div class="sheet-in">
+  <header><h2 id="h-wifi">Wi-Fi</h2><button class="pill" data-close>Done</button></header>
+  <div class="done-box" id="doneBox" hidden>
+    <h3>Connected</h3>
+    <p style="margin:0">The lamp is on <b id="dSsid"></b>. From now on its page is at <a id="dHome"></a> (or <a id="dIp"></a>).</p>
+    <div class="actions" style="justify-content:flex-start"><button class="pill primary" id="dCopy">Copy address</button></div>
+    <p class="hint" id="dCount"></p>
+  </div>
+  <div class="field"><p style="margin:0" id="wStat"></p></div>
+  <div class="field">
+    <button class="pill" id="scan">Find networks</button>
+    <div class="nets" id="nets"></div>
+  </div>
+  <div class="field"><label class="label" for="ssid">Network</label><input type="text" id="ssid" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+  <div class="field"><label class="label" for="pw">Password</label><input type="password" id="pw" autocomplete="off">
+    <label class="check"><span>Show password</span><input type="checkbox" id="showPw"></label></div>
+  <div class="actions" style="justify-content:flex-start"><button class="pill primary" id="join">Connect</button></div>
+  <p class="hint">The lamp only sees 2.4 GHz networks.</p>
+</div></section>
+
+<!-- Lamp -->
+<section class="sheet" id="sheet-lamp" aria-labelledby="h-lamp"><div class="sheet-in">
+  <header><h2 id="h-lamp">Lamp</h2><button class="pill" data-close>Done</button></header>
+  <div class="field"><label class="label" for="host">Name on the network</label><input type="text" id="host" autocapitalize="off" spellcheck="false"><p class="hint">The page will be at http://<i>name</i>.local after a restart.</p></div>
+  <div class="field"><label class="check"><span>Soft shadow edge</span><input type="checkbox" id="smooth"></label><p class="hint" style="margin-top:0">Off switches chambers fully on or off, like the original toy.</p></div>
+  <div class="field"><label class="check"><span>Southern hemisphere</span><input type="checkbox" id="south"></label></div>
+  <div class="field"><div class="row"><label for="sweep">Light sweep when switched on</label><output id="sweepOut"></output></div><input type="range" id="sweep" min="0" max="0.5" step="0.01"></div>
+  <div class="field actions" style="justify-content:flex-start"><button class="pill" id="defaults">Back to defaults</button><button class="pill" id="restart">Restart lamp</button></div>
+</div></section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let glance = null;   // {p, until}: a colour being shown off for a moment
+const GLANCE_MS = 5000; // matches GLANCE_S in lamp.py
+// Change the look and show it off on phase p for a moment, in one request,
+// so the lamp switches in one step.
+function showOff(changes, p, title, info, btn, note) {
+  glance = {p, until: Date.now() + GLANCE_MS, title, info};
+  $$('.sw.glancing').forEach(b => b.classList.remove('glancing'));
+  $$('.glance-note').forEach(n => n.textContent = '');
+  void btn.offsetWidth;   // restart the ring if the same swatch is tapped again
+  btn.style.setProperty('--t', GLANCE_MS + 'ms'); btn.classList.add('glancing');
+  note.textContent = `The lamp is showing this ${p === .5 ? 'as a full moon' : 'on a crescent'} for ${GLANCE_MS / 1000} seconds, then tonight's moon again.`;
+  Object.assign(S.settings, changes);
+  later('/api/settings', {...changes, glance: p}, true);
+  render();
+  clearTimeout(showOff.t); showOff.t = setTimeout(() => {
+    glance = null; btn.classList.remove('glancing'); note.textContent = ''; render();
+  }, GLANCE_MS + 50);
+}
+const glancing = () => glance && Date.now() < glance.until;
+let S = null, busy = Promise.resolve(), pend = {}, saveT = null, scrubbed = null, scrubAt = 0, drag = null, handingOff = false;
+
+// ---------- talking to the lamp
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} :
+    {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({error: 'No reply from the lamp.'}));
+  if (!r.ok) throw new Error(j.error || 'The lamp said ' + r.status);
+  return j;
+}
+let toastT;
+function toast(text, bad) {
+  const t = $('#toast'); t.textContent = text; t.className = 'toast show' + (bad ? ' bad' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = 'toast', bad ? 5000 : 1600);
+}
+const fail = e => toast(e.message || String(e), true);
+// Changes go one at a time; quick slider moves collapse into one send.
+function later(path, body, merge) {
+  const first = !(path in pend);
+  pend[path] = merge && pend[path] ? Object.assign(pend[path], body) : body;
+  if (!first) return;
+  busy = busy.then(() => new Promise(r => setTimeout(r, 80))).then(() => {
+    const b = pend[path]; delete pend[path]; return api(path, b);
+  }).then(j => { update(j); if (path === '/api/settings') autosave(); }).catch(fail);
+}
+function now(path, body = {}) {
+  const p = busy.then(() => api(path, body)).then(j => { if (j && j.settings) update(j); if (path === '/api/settings') autosave(); return j; });
+  busy = p.catch(() => {});
+  return p.catch(fail);
+}
+function autosave() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => now('/api/save').then(j => j && toast('Saved')), 1200);
+}
+function set(changes) { Object.assign(S.settings, changes); later('/api/settings', changes, true); render(); }
+
+// ---------- moon maths (the same as lamp.py)
+function fractions(p, st) {
+  const n = 6, wax = p < .5, swept = (wax ? p : p - .5) * 2 * n, out = [];
+  for (let j = 0; j < n; j++) {
+    let f = Math.min(1, Math.max(0, swept - (st.NORTHERN_HEMISPHERE ? n - 1 - j : j)));
+    if (!st.SMOOTH_EDGE) f = f >= .5 ? 1 : 0;
+    out.push(wax ? f : 1 - f);
+  }
+  return out;
+}
+const NAMES = ['New moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous', 'Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
+const pname = p => NAMES[Math.floor(p * 8 + .5) % 8];
+const litPct = p => Math.round((1 - Math.cos(2 * Math.PI * p)) * 50);
+const wrap = p => ((p % 1) + 1) % 1;
+
+// ---------- colours
+const hex = c => '#' + c.slice(0, 3).map(x => x.toString(16).padStart(2, '0')).join('');
+const fromHex = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+const looksLike = c => [c[0] + c[3], c[1] + c[3] * .95, c[2] + c[3] * .85];   // RGBW, roughly as seen
+function bright(c, level) { const rgb = looksLike(c), m = Math.max(1, ...rgb); return rgb.map(x => x / m * 255 * level); }
+const css = rgb => `rgb(${rgb.map(Math.round).join(',')})`;
+const BASE = [30, 33, 58];
+function warmColor(w) {   // warmth 0 cool blue-white, 0.5 the white LED alone, 1 harvest amber
+  if (w <= .5) { const t = (.5 - w) / .5; return [0, Math.round(30 * t), Math.round(90 * t), 255]; }
+  const t = (w - .5) / .5;
+  return [Math.round(255 * t), Math.round(100 * t), 0, Math.round(255 - 195 * t * t)];
+}
+function warmthOf(c) {
+  for (let i = 0; i <= 100; i++) if (warmColor(i / 100).every((v, k) => v === c[k])) return i / 100;
+  return null;
+}
+const warmWord = w => w < .3 ? 'Cool' : w < .6 ? 'Neutral' : w < .88 ? 'Warm' : 'Amber';
+
+const LOOKS = [
+  {id: 'cool', name: 'Cool', w: .15, bg: 'radial-gradient(circle at 35% 35%,#fff,#d6e4ff 55%,#9fb4e2)'},
+  {id: 'neutral', name: 'Moon', w: .5, bg: 'radial-gradient(circle at 35% 35%,#fffdf3,#ece5cc 60%,#c9c1a4)'},
+  {id: 'warm', name: 'Warm', w: .75, bg: 'radial-gradient(circle at 35% 35%,#fff1d6,#f3cf8f 60%,#d6a35a)'},
+  {id: 'harvest', name: 'Harvest', w: 1, bg: 'radial-gradient(circle at 35% 35%,#ffc77a,#f0892e 60%,#b85a12)'},
+  {id: 'blood', name: 'Blood moon', bg: 'radial-gradient(circle,#8e1606 30%,#e2501a 85%)'},
+  {id: 'jupiter', name: 'Jupiter', bg: 'linear-gradient(90deg,#f6dcb0,#d98b4a 28%,#f7e2bf 46%,#b8683a 64%,#c8442a 70%,#e7b47a 86%)'},
+  {id: 'nebula', name: 'Nebula', bg: 'linear-gradient(90deg,#7a2cff,#ff2ea0 35%,#2b1cff 65%,#ff6ad5)'},
+  {id: 'rainbow', name: 'Rainbow', bg: 'linear-gradient(90deg,#00a0ff,#7a00ff,#ff0080,#ff8400,#80ff00,#00ff8e)'},
+  {id: 'aurora', name: 'Aurora', bg: 'linear-gradient(90deg,#26d07c,#0fb5a0 40%,#9a45ff 62%,#2ee870)'},
+  {id: 'custom', name: 'Custom'},
+];
+const ANIMATED = ['jupiter', 'nebula', 'rainbow', 'aurora'];
+const GLOWS = [
+  {id: 'none', name: 'None'},
+  {id: 'ember', name: 'Ember', c: [255, 40, 0, 0]},
+  {id: 'red', name: 'Red', c: [255, 0, 0, 0]},
+  {id: 'earth', name: 'Earthshine', c: [40, 70, 255, 30]},
+  {id: 'blue', name: 'Night blue', c: [0, 20, 255, 0]},
+  {id: 'violet', name: 'Violet', c: [120, 0, 255, 0]},
+  {id: 'custom', name: 'Custom'},
+];
+const same = (a, b) => a.every((v, i) => v === b[i]);
+function currentLook(st) {
+  if (st.THEME !== 'moon') return st.THEME;
+  const w = warmthOf(st.COLOR), l = LOOKS.find(l => l.w !== undefined && w !== null && Math.abs(l.w - w) < .005);
+  return l ? l.id : 'custom';
+}
+function currentGlow(st) {
+  if (!st.DARK_GLOW) return 'none';
+  const g = GLOWS.find(g => g.c && same(g.c, st.DARK_COLOR));
+  return g ? g.id : 'custom';
+}
+const crescent = 'radial-gradient(circle at 118% 50%,#f4efdf 0 40%,transparent 41%)';
+
+function buildSwatches() {
+  $('#looks').innerHTML = LOOKS.map(l => `<button class="sw" data-look="${l.id}" aria-pressed="false"><i${l.bg ? ` style="background:${l.bg}"` : ' class="add"'}></i>${l.name}</button>`).join('');
+  $('#glows').innerHTML = GLOWS.map(g => `<button class="sw" data-glow="${g.id}" aria-pressed="false"><i style="background:${crescent},${
+    g.id === 'none' ? css(BASE) : g.c ? css(bright(g.c, .62)) : 'none'}"${g.id === 'custom' ? ' class="add"' : ''}></i>${g.name}</button>`).join('');
+}
+
+// ---------- drawing the moon on the page
+function drawMoon(p) {
+  if (!S) return;
+  const st = S.settings, sc = S.schedule, f = p == null ? [0, 0, 0, 0, 0, 0] : fractions(p, st);
+  const power = scrubbed != null || glance || S.showing !== 'tonight' ? 1 : sc ? sc.power : 1;
+  const level = .5 + .5 * st.BRIGHTNESS;
+  const dark = st.DARK_GLOW ? bright(st.DARK_COLOR, Math.min(1, .15 + st.DARK_BRIGHTNESS * 1.3) * .42).map((x, i) => Math.max(x, BASE[i])) : BASE;
+  let sum = [0, 0, 0], n = 0;
+  $$('#slices rect').forEach((r, j) => {
+    const lit = bright(S.theme ? S.theme[j] : st.COLOR, level);
+    const mix = lit.map((x, i) => dark[i] + (x - dark[i]) * f[j]).map((x, i) => BASE[i] + (x - BASE[i]) * power);
+    r.setAttribute('fill', css(mix));
+    if (f[j] > .5) { lit.forEach((x, i) => sum[i] += x); n++; }
+  });
+  // The page takes on the moon's light.
+  const halo = n ? bright([...sum.map(x => x / n), 0], 1) : bright(S.theme ? S.theme[2] : st.COLOR, 1);
+  document.documentElement.style.setProperty('--lit', halo.map(Math.round).join(','));
+  placeMarks(p);
+  $('#moon').setAttribute('aria-valuenow', p == null ? 0 : Math.round(p * 100));
+  $('#moon').setAttribute('aria-valuetext', p == null ? 'Unknown' : `${pname(p)}, ${litPct(p)}% lit`);
+}
+
+function untilText(p) {
+  const toFull = wrap(.5 - p) * 29.53, toNew = wrap(1 - p) * 29.53;
+  const [what, d] = toFull <= toNew ? ['Full moon', toFull] : ['New moon', toNew];
+  return d < 1 ? `${what} today` : d < 2 ? `${what} tomorrow` : `${what} in ${Math.round(d)} days`;
+}
+
+function heroText() {
+  const st = S.settings, a = $('#actions');
+  // While a colour is shown off, the words stay on the real phase.
+  const p = scrubbed ?? (S.showing === 'glance' ? st.FIXED_PHASE ?? S.tonight : S.phase);
+  let info, buttons = '';
+  if (glancing()) {
+    $('#pname').textContent = glance.title;
+    info = glance.info;
+    buttons = `<div class="bar" style="--t:${GLANCE_MS}ms" data-k="${glance.until}"><i></i></div>`;
+  } else if (p == null) {
+    $('#pname').textContent = 'Moon lamp';
+    info = S.wifi.connected ? 'Waiting for the time from the internet.' : 'Join your Wi-Fi to show tonight\'s moon.';
+  } else {
+    $('#pname').textContent = pname(p);
+    if (scrubbed != null || S.showing === 'phase') {
+      info = `${litPct(p)}% lit. The lamp is showing this for two minutes.`;
+      buttons = '<button class="pill primary" data-act="keep">Keep this phase</button><button class="pill" data-act="tonight">Back to tonight</button>';
+    } else if (S.showing === 'demo') {
+      info = 'Playing a whole month in 30 seconds.';
+      buttons = '<button class="pill" data-act="tonight">Stop</button>';
+    } else if (st.FIXED_PHASE !== null) {
+      info = `${litPct(p)}% lit, shown all the time.`;
+      buttons = '<button class="pill" data-act="unfix">Back to tonight\'s moon</button>';
+    } else {
+      info = `${litPct(p)}% lit. ${untilText(p)}.`;
+      buttons = '<button class="link" data-act="demo">Play a month</button>';
+    }
+  }
+  $('#pinfo').textContent = info;
+  if (a.dataset.html !== buttons) { a.innerHTML = buttons; a.dataset.html = buttons; }
+}
+
+// ---------- the page from the lamp's state
+function update(j) {
+  if (!j || !j.settings) return;
+  const first = !S; S = j;
+  // A preview the lamp has finished (or never got) ends here, but not while
+  // this page's own latest drag is still on its way to the lamp.
+  if (S.showing !== 'phase' && !drag && Date.now() - scrubAt > 3000) scrubbed = null;
+  if (first) {
+    buildSwatches(); fill(); tzCheck(S.settings); render();
+    showSelected($('#looks')); showSelected($('#glows'));
+    if (!S.wifi.connected) openSheet('wifi'); else if (location.hash) openSheet(location.hash.slice(1));
+  }
+  render();
+}
+function val(el, v) { if (document.activeElement !== el) el.value = v; }
+function fill() {   // values that are only refreshed when the panels open or settings reset
+  const st = S.settings;
+  val($('#numLeds'), st.NUM_LEDS); $('#led').max = st.NUM_LEDS - 1;
+  $('#chambers').innerHTML = [0, 1, 2, 3, 4, 5].map(i => `<label for="ch${i}">Chamber ${i + 1}</label><input type="text" id="ch${i}" inputmode="numeric" placeholder="even split" value="${st.CHAMBERS ? st.CHAMBERS[i].join(', ') : ''}">`).join('');
+  $('#gains').innerHTML = st.GAIN.map((v, i) => `<div class="row"><label for="g${i}">Chamber ${i + 1}</label><output>${v.toFixed(2)}</output></div><input type="range" id="g${i}" min="0.2" max="2" step="0.01" value="${v}" data-g="${i}">`).join('');
+  $$('[data-g]').forEach(el => el.oninput = () => {
+    el.previousElementSibling.lastElementChild.value = (+el.value).toFixed(2);
+    set({GAIN: $$('[data-g]').map(e => +e.value)}); later('/api/show', {phase: .5});
+  });
+  val($('#host'), st.HOSTNAME);
+  val($('#place'), st.LATITUDE == null ? '' : `${st.LATITUDE}, ${st.LONGITUDE ?? ''}`);
+}
+function render() {
+  const st = S.settings, sc = S.schedule, w = S.wifi;
+  if (!drag) drawMoon(glancing() ? glance.p : scrubbed ?? S.phase);
+  heroText();
+
+  // power
+  const on = sc ? sc.power > 0 : true;
+  $('#power').setAttribute('aria-pressed', on); $('#power').setAttribute('aria-label', on ? 'Turn the lamp off' : 'Turn the lamp on');
+  $('#powerState').textContent = !sc ? 'On' : sc.power >= 1 ? 'On' : sc.power <= 0 ? 'Off' : 'Fading';
+  $('#powerNote').textContent = sc && sc.override !== null ? `Turned ${sc.override ? 'on' : 'off'} by hand` + (sc.until ? ` until ${clock(sc.until)}` : '')
+    : st.SCHEDULE && sc && sc.next ? `Turns ${sc.next[0]} at ${clock(sc.next[1])}` : 'No schedule set';
+  $('#powerAuto').hidden = !(sc && sc.override !== null && st.SCHEDULE);
+
+  val($('#bright'), st.BRIGHTNESS);
+  const look = currentLook(st), glow = currentGlow(st);
+  $$('[data-look]').forEach(b => b.setAttribute('aria-pressed', b.dataset.look === look));
+  $$('[data-glow]').forEach(b => b.setAttribute('aria-pressed', b.dataset.glow === glow));
+  const cl = $('[data-look=custom] i'); if (cl) { cl.style.background = look === 'custom' ? css(bright(st.COLOR, 1)) : ''; cl.className = look === 'custom' ? '' : 'add'; }
+  const cg = $('[data-glow=custom] i'); if (cg) { cg.style.background = glow === 'custom' ? `${crescent},${css(bright(st.DARK_COLOR, .62))}` : ''; cg.className = glow === 'custom' ? '' : 'add'; }
+  $('#motionRow').hidden = !ANIMATED.includes(st.THEME);
+  $('#motion').checked = st.THEME_MOTION;
+
+  // list notes
+  const noPlace = st.LATITUDE == null || st.LONGITUDE == null;
+  $('#nSchedule').textContent = st.SCHEDULE ? `${atText(st.ON_AT)} to ${atText(st.OFF_AT)}` : 'Off';
+  $('#nGlow').textContent = !st.DARK_GLOW ? 'Off' : `${Math.round(st.DARK_BRIGHTNESS * 100)}%` + (st.GLOW_TWILIGHT ? ', around sunset and sunrise' : ', all night');
+  $('#nWifi').textContent = w.connected ? w.ssid : w.ssid ? 'Not connected' : 'Not set up';
+  $('#nWifi').className = w.connected ? '' : 'warn';
+  $('#nLamp').textContent = w.connected ? `${w.hostname}.local` : '';
+
+  // schedule panel
+  $('#sched').checked = st.SCHEDULE;
+  dimBox($('#schedOpts'), st.SCHEDULE);
+  for (const k of ['on', 'off']) {
+    const at = st[k.toUpperCase() + '_AT'], sun = at === 'sunset' || at === 'sunrise';
+    val($(`#${k}Kind`), sun ? at : 'time');
+    $(`#${k}Time`).hidden = sun; if (!sun) val($(`#${k}Time`), at);
+    $(`#${k}OffRow`).hidden = !sun; val($(`#${k}Off`), st[k.toUpperCase() + '_OFFSET_MIN']);
+  }
+  val($('#fade'), st.FADE_MIN); $('#fadeOut').value = st.FADE_MIN ? `${st.FADE_MIN} min` : 'None';
+  const usesSun = [st.ON_AT, st.OFF_AT].some(a => a === 'sunset' || a === 'sunrise');
+  $('#schedWarn').textContent = st.SCHEDULE && usesSun && noPlace ? 'Sunrise and sunset need the lamp\'s location, below.' : '';
+  $('#sunLine').textContent = !sc || noPlace ? '' : sc.sun.sunrise ? `Today the sun rises at ${clock(sc.sun.sunrise)} and sets at ${clock(sc.sun.sunset)}.` : 'The sun doesn\'t rise or set here today.';
+  $('#tzLine').textContent = `Time zone: ${st.TZ_NAME ? st.TZ_NAME.replace(/_/g, ' ') : 'not set yet'}` + (sc ? `. The lamp's clock says ${clock(sc.time)}.` : '.');
+  $('#tzUse').hidden = !st.TZ_NAME || st.TZ_NAME === TZ; $('#tzUse').textContent = `Use this device's time zone, ${TZ.replace(/_/g, ' ')}`;
+
+  // glow panel
+  $('#glowOn').checked = st.DARK_GLOW; dimBox($('#glowOpts'), st.DARK_GLOW);
+  val($('#glowStr'), st.DARK_BRIGHTNESS); $('#glowStrOut').value = Math.round(st.DARK_BRIGHTNESS * 100) + '%';
+  $('#twi').checked = st.GLOW_TWILIGHT; if (st.DARK_GLOW) dimBox($('#twiOpts'), st.GLOW_TWILIGHT);
+  val($('#twiMin'), st.TWILIGHT_MIN); $('#twiOut').value = st.TWILIGHT_MIN + ' min';
+  $('#twiNote').textContent = !st.GLOW_TWILIGHT ? '' : noPlace ? 'Add the lamp\'s location under Schedule and location; until then the glow stays on.' : sc ? `Right now the glow is at ${Math.round(sc.glow * 100)}%.` : '';
+  val($('#glowRgb'), hex(st.DARK_COLOR)); val($('#glowW'), st.DARK_COLOR[3]); $('#glowWOut').value = st.DARK_COLOR[3];
+
+  // colour panel
+  const wm = warmthOf(st.COLOR);
+  if (wm !== null) val($('#warmth'), wm);
+  $('#warmthOut').value = st.THEME !== 'moon' ? 'Theme' : wm === null ? 'Custom' : warmWord(wm);
+  val($('#litW'), st.COLOR[3]); $('#litWOut').value = st.COLOR[3]; val($('#litRgb'), hex(st.COLOR));
+
+  // lamp panel
+  $('#smooth').checked = st.SMOOTH_EDGE; $('#south').checked = !st.NORTHERN_HEMISPHERE;
+  val($('#sweep'), st.SWEEP_STEP_S); $('#sweepOut').value = st.SWEEP_STEP_S ? st.SWEEP_STEP_S.toFixed(2) + ' s' : 'Off';
+  $('#led0Left').checked = st.LED0_ON_LEFT;
+
+  wifiStatus();
+}
+function dimBox(box, on) {
+  box.style.opacity = on ? 1 : .45;
+  box.querySelectorAll('input,select,button').forEach(i => i.disabled = !on);
+}
+// Times come from the lamp as "HH:MM"; show them the way this device does.
+function clock(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+}
+const atText = a => a === 'sunset' || a === 'sunrise' ? a : clock(a);
+function showSelected(row) {   // scroll a swatch row so its choice is in view
+  const b = row.querySelector('[aria-pressed=true]');
+  if (b) row.scrollLeft = b.offsetLeft - row.offsetLeft - (row.clientWidth - b.offsetWidth) / 2;
+}
+
+// ---------- the month strip: one dot per night, as bright as that night's moon
+const NIGHTS = 30;
+$('#strip').insertAdjacentHTML('afterbegin', Array.from({length: NIGHTS}, (_, i) => {
+  const p = i / (NIGHTS - 1), lit = (1 - Math.cos(2 * Math.PI * p)) / 2;
+  return `<i style="left:${p * 100}%;opacity:${(.18 + .82 * lit).toFixed(2)}"></i>`;
+}).join(''));
+function placeMarks(p) {
+  const t = $('#tonightMark'), a = $('#atMark');
+  t.hidden = S.tonight == null; if (S.tonight != null) t.style.left = S.tonight * 100 + '%';
+  a.hidden = p == null; if (p != null) a.style.left = p * 100 + '%';
+}
+let stripDrag = false;
+const stripAt = e => { const r = $('#strip').getBoundingClientRect(); return Math.min(.9999, Math.max(0, (e.clientX - r.left) / r.width)); };
+$('#strip').addEventListener('pointerdown', e => { if (!S) return; stripDrag = drag = true; $('#strip').setPointerCapture(e.pointerId); scrub(stripAt(e)); });
+$('#strip').addEventListener('pointermove', e => { if (stripDrag) scrub(stripAt(e)); });
+const endStrip = () => { stripDrag = false; drag = null; };
+$('#strip').addEventListener('pointerup', endStrip); $('#strip').addEventListener('pointercancel', endStrip);
+const stepNight = d => S && scrub((scrubbed ?? S.phase ?? .5) + d / 29.53);
+$('#prevNight').onclick = () => stepNight(-1);
+$('#nextNight').onclick = () => stepNight(1);
+
+// ---------- the moon: drag or arrow keys to see other nights
+const moon = $('#moon');
+function scrub(p) {
+  scrubbed = wrap(p); scrubAt = Date.now(); drawMoon(scrubbed); heroText();
+  later('/api/show', {phase: +scrubbed.toFixed(4)});
+}
+moon.addEventListener('pointerdown', e => {
+  if (!S) return;
+  drag = {x: e.clientX, p: scrubbed ?? S.phase ?? .5, w: moon.getBoundingClientRect().width, moved: false};
+  moon.setPointerCapture(e.pointerId);
+});
+moon.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x;
+  if (!drag.moved && Math.abs(dx) < 4) return;
+  drag.moved = true; scrub(drag.p + dx / drag.w * .5);
+});
+const endDrag = () => { drag = null; };
+moon.addEventListener('pointerup', endDrag); moon.addEventListener('pointercancel', endDrag);
+moon.addEventListener('keydown', e => {
+  if (!S || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  e.preventDefault(); scrub((scrubbed ?? S.phase ?? .5) + (e.key === 'ArrowRight' ? 1 : -1) / 29.53);
+});
+$('#actions').addEventListener('click', e => {
+  const act = e.target.dataset.act; if (!act) return;
+  if (act === 'keep') { const p = +(scrubbed ?? S.phase).toFixed(4); scrubbed = null; now('/api/settings', {FIXED_PHASE: p}).then(() => now('/api/show', {})); }
+  if (act === 'tonight') { scrubbed = null; now('/api/show', {}); }
+  if (act === 'unfix') now('/api/settings', {FIXED_PHASE: null});
+  if (act === 'demo') now('/api/show', {demo: true});
+});
+
+// ---------- main controls
+$('#power').onclick = () => now('/api/power', {on: !(S.schedule ? S.schedule.power > 0 : true)});
+$('#powerAuto').onclick = () => now('/api/power', {on: null});
+$('#bright').oninput = () => set({BRIGHTNESS: +$('#bright').value});
+$('#looks').addEventListener('click', e => {
+  const b = e.target.closest('[data-look]'); if (!b) return;
+  const l = LOOKS.find(l => l.id === b.dataset.look);
+  if (l.id === 'custom') { if (S.settings.THEME !== 'moon') set({THEME: 'moon'}); openSheet('colour'); }
+  else showOff(l.w !== undefined ? {THEME: 'moon', COLOR: warmColor(l.w)} : {THEME: l.id}, .5,
+    l.name, `Shown as a full moon for ${GLANCE_MS / 1000} seconds.`, b, $('#looksNote'));
+});
+$('#motion').onchange = () => set({THEME_MOTION: $('#motion').checked});
+$('#glows').addEventListener('click', e => {
+  const b = e.target.closest('[data-glow]'); if (!b) return;
+  const g = GLOWS.find(g => g.id === b.dataset.glow);
+  if (g.id === 'custom') { set({DARK_GLOW: true}); openSheet('glow'); return; }
+  showOff(g.id === 'none' ? {DARK_GLOW: false} : {DARK_GLOW: true, DARK_COLOR: g.c.slice()}, .1,
+    g.id === 'none' ? 'No glow' : `${g.name} glow`, `Shown on a crescent for ${GLANCE_MS / 1000} seconds.`, b, $('#glowsNote'));
+});
+
+// ---------- panels
+function openSheet(name) {
+  const s = $('#sheet-' + name); if (!s) return;
+  if (name === 'calibrate' || name === 'lamp' || name === 'schedule') fill();
+  s.classList.add('open'); s.scrollTop = 0;
+  setTimeout(() => s.querySelector('[data-close]').focus({preventScroll: true}), 50);
+}
+function closeSheets() { $$('.sheet.open').forEach(s => s.classList.remove('open')); }
+document.addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if (o) openSheet(o.dataset.open);
+  if (e.target.closest('[data-close]')) closeSheets();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheets(); });
+
+// schedule and location
+$('#sched').onchange = () => set({SCHEDULE: $('#sched').checked});
+for (const k of ['on', 'off']) {
+  const K = k.toUpperCase();
+  const at = () => $(`#${k}Kind`).value === 'time' ? ($(`#${k}Time`).value || (k === 'on' ? '19:00' : '23:00')) : $(`#${k}Kind`).value;
+  $(`#${k}Kind`).onchange = () => set({[K + '_AT']: at()});
+  $(`#${k}Time`).onchange = () => set({[K + '_AT']: at()});
+  $(`#${k}Off`).onchange = () => set({[K + '_OFFSET_MIN']: +$(`#${k}Off`).value || 0});
+}
+$('#fade').oninput = () => set({FADE_MIN: +$('#fade').value});
+$('#place').onchange = () => {
+  const t = $('#place').value.trim();
+  if (!t) return set({LATITUDE: null, LONGITUDE: null});
+  const n = t.split(/[\s,]+/).filter(Boolean).map(Number);
+  if (n.length !== 2 || n.some(isNaN)) return toast('Paste both numbers, latitude first, like 51.50, -0.13.', true);
+  set({LATITUDE: n[0], LONGITUDE: n[1]});
+};
+
+// time zone: worked out here, because the lamp has no list of time zones
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function tzRules() {     // [[Unix time, minutes ahead of UTC], ...] for 10 years
+  const start = Date.UTC(new Date().getUTCFullYear(), 0, 1), day = 864e5;
+  const off = t => -new Date(t).getTimezoneOffset();
+  let prev = off(start); const rules = [[start / 1000, prev]];
+  for (let t = start + day; t <= start + 3653 * day; t += day) {
+    const o = off(t);
+    if (o === prev) continue;
+    let lo = t - day, hi = t;            // find the change to the minute
+    while (hi - lo > 6e4) { const mid = Math.floor((lo + hi) / 1.2e5) * 6e4; if (off(mid) === prev) lo = mid; else hi = mid; }
+    rules.push([hi / 1000, o]); prev = o;
+  }
+  return rules;
+}
+function useTz() { now('/api/settings', {TZ_NAME: TZ, TZ_RULES: tzRules()}); }
+function tzCheck(st) {   // set it the first time, and refresh the rules each year
+  if (!st.TZ_NAME || (st.TZ_NAME === TZ && JSON.stringify(tzRules()) !== JSON.stringify(st.TZ_RULES))) useTz();
+}
+$('#tzUse').onclick = useTz;
+
+// glow
+$('#glowOn').onchange = () => set({DARK_GLOW: $('#glowOn').checked});
+$('#glowStr').oninput = () => set({DARK_BRIGHTNESS: +$('#glowStr').value});
+$('#twi').onchange = () => set({GLOW_TWILIGHT: $('#twi').checked});
+$('#twiMin').oninput = () => set({TWILIGHT_MIN: +$('#twiMin').value});
+const glowMix = () => set({DARK_COLOR: [...fromHex($('#glowRgb').value), +$('#glowW').value]});
+$('#glowRgb').oninput = glowMix; $('#glowW').oninput = glowMix;
+
+// moonlight colour
+$('#warmth').oninput = () => set({THEME: 'moon', COLOR: warmColor(+$('#warmth').value)});
+const litMix = () => set({THEME: 'moon', COLOR: [...fromHex($('#litRgb').value), +$('#litW').value]});
+$('#litRgb').oninput = litMix; $('#litW').oninput = litMix;
+
+// calibrate
+function led(i) { i = Math.max(0, Math.min(S.settings.NUM_LEDS - 1, i)); $('#led').value = i; later('/api/show', {led: i}); }
+$('#ledM').onclick = () => led(+$('#led').value - 1);
+$('#ledP').onclick = () => led(+$('#led').value + 1);
+$('#led').onchange = () => led(+$('#led').value);
+$('#numLeds').onchange = () => set({NUM_LEDS: +$('#numLeds').value});
+$('#setCh').onclick = () => {
+  const ch = $$('#chambers input').map(e => e.value.split(/[\s,]+/).filter(Boolean).map(Number));
+  if (ch.some(c => c.some(isNaN))) return toast('List LED numbers separated by commas, like 0, 1, 2.', true);
+  now('/api/settings', {CHAMBERS: ch}).then(j => j && fill());
+};
+$('#evenCh').onclick = () => now('/api/settings', {CHAMBERS: null}).then(j => j && fill());
+$('#led0Left').onchange = () => set({LED0_ON_LEFT: $('#led0Left').checked});
+
+// lamp
+$('#host').onchange = () => set({HOSTNAME: $('#host').value.trim()});
+$('#smooth').onchange = () => set({SMOOTH_EDGE: $('#smooth').checked});
+$('#south').onchange = () => set({NORTHERN_HEMISPHERE: !$('#south').checked});
+$('#sweep').oninput = () => set({SWEEP_STEP_S: +$('#sweep').value});
+$('#defaults').onclick = () => confirm('Go back to the default look, schedule and calibration? Wi-Fi is kept.') &&
+  now('/api/defaults').then(j => { if (j) { fill(); autosave(); toast('Back to defaults'); } });
+$('#restart').onclick = () => confirm('Restart the lamp?') &&
+  api('/api/restart', {}).then(() => toast('Restarting. Reload this page in a few seconds.')).catch(fail);
+
+// ---------- Wi-Fi
+function wifiStatus() {
+  const w = S.wifi;
+  let t = w.connected ? `Connected to ${w.ssid}. This page is at http://${w.hostname}.local or http://${w.ip}.`
+    : w.joining ? `Connecting to ${w.ssid}…` : w.ssid ? `Can't reach ${w.ssid}: ${w.status}.` : 'Not set up yet. Pick your home network below.';
+  $('#wStat').textContent = t; $('#wStat').className = w.connected || w.joining || !w.ssid ? '' : 'warn';
+  if (!$('#ssid').value && w.ssid) $('#ssid').value = w.ssid;
+  if (w.connected && w.setup && w.ip && location.hostname === w.setup_ip && !handingOff) handoff(w);
+}
+$('#showPw').onchange = () => $('#pw').type = $('#showPw').checked ? 'text' : 'password';
+$('#scan').onclick = async () => {
+  const b = $('#scan'); b.disabled = true; b.textContent = 'Looking…';
+  try {
+    const list = await api('/api/scan'), box = $('#nets'); box.innerHTML = '';
+    if (!list.length) box.textContent = 'No 2.4 GHz networks found.';
+    list.forEach(n => {
+      const e = document.createElement('button');
+      e.innerHTML = '<b></b><span></span>';
+      e.firstChild.textContent = n.ssid;
+      e.lastChild.textContent = (n.rssi > -60 ? 'Strong' : n.rssi > -75 ? 'Good' : 'Weak') + (n.locked ? ', locked' : '');
+      e.onclick = () => { $('#ssid').value = n.ssid; $('#pw').focus(); };
+      box.appendChild(e);
+    });
+  } catch (e) { fail(e); }
+  b.disabled = false; b.textContent = 'Find networks';
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$('#join').onclick = async () => {
+  const ssid = $('#ssid').value.trim();
+  if (!ssid) return toast('Pick a network first.', true);
+  await now('/api/wifi', {ssid, password: $('#pw').value});
+  for (let i = 0; i < 20; i++) {
+    await sleep(2000);
+    try { const j = await api('/api/state'); update(j); if (j.wifi.connected || !j.wifi.joining) return; }
+    catch (e) { /* the device may have hopped networks */ }
+  }
+  toast('No answer from the lamp. If it joined, switch back to your home Wi-Fi and open http://' + S.settings.HOSTNAME + '.local', true);
+};
+// Once the lamp is on the home Wi-Fi, show its new address, close the setup
+// network, and follow the lamp there when this device is back home.
+const SETUP_CLOSE_S = 20;    // matches SETUP_CLOSE_S in net.py
+async function handoff(w) {
+  handingOff = true; openSheet('wifi');
+  const home = `http://${w.hostname}.local/`, ip = `http://${w.ip}/`;
+  $('#dSsid').textContent = w.ssid;
+  $('#dHome').textContent = $('#dHome').href = home;
+  $('#dIp').textContent = $('#dIp').href = ip;
+  $('#dCopy').onclick = () => copy(home);
+  $('#doneBox').hidden = false;
+  api('/api/setup-done', {}).catch(() => {});
+  for (let left = SETUP_CLOSE_S; left > 0; left--) {
+    $('#dCount').textContent = `The setup network closes in ${left} seconds. Your device will go back to your home Wi-Fi.`;
+    await sleep(1000);
+  }
+  $('#dCount').textContent = `Setup network closed. If this page doesn't move by itself, open ${home}`;
+  for (let i = 0; i < 90; i++) {
+    await sleep(2000);
+    try {
+      // The lamp's home address can't be reached from its setup network,
+      // so an answer means this device is back on the home Wi-Fi.
+      await fetch(ip + 'api/state', {mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(1500)});
+      location.href = home; return;
+    } catch (e) { /* not back yet */ }
+  }
+}
+function copy(text) {   // the clipboard API needs https, so fall back to the old way
+  const done = () => { $('#dCopy').textContent = 'Copied'; };
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(done);
+  const i = document.createElement('input');
+  i.value = text; document.body.appendChild(i); i.select();
+  try { document.execCommand('copy'); done(); } catch (e) { /* it is selected, at least */ }
+  i.remove();
+}
+
+// ---------- keep up with the lamp
+let lost = false;
+function poll() {
+  if (document.hidden || handingOff || drag) return;
+  api('/api/state').then(j => { if (lost) { lost = false; toast('Back in touch with the lamp'); } update(j); })
+    .catch(() => { if (!lost) { lost = true; toast('Lost contact with the lamp. Retrying…', true); } });
+}
+poll(); setInterval(poll, 4000);
+document.addEventListener('visibilitychange', poll);
+</script>
+</body>
+</html>

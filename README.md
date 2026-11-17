@@ -39,16 +39,85 @@ strip and the board always power up together.
 
 1. Install [Thonny](https://thonny.org) and use it to put MicroPython on the
    ESP32 (Run → Configure interpreter → MicroPython (ESP32) → Install).
-2. Open `main.py`, set `WIFI_SSID` and `WIFI_PASSWORD` (2.4 GHz only), and
-   set `NUM_LEDS` to the number of LEDs on your piece of strip.
-3. Save it to the board as `main.py`. It runs at every power-on.
+2. Copy every file in the `board` folder to the ESP32: in Thonny, open
+   View → Files, select them all and choose "Upload to /". `main.py` runs at
+   every power-on.
+3. Restart the board.
 
-Do not commit your real Wi-Fi name or password.
+## Joining your Wi-Fi
+
+The first time it starts, the lamp has no Wi-Fi saved, so it opens its own
+network called **MoonLamp-XXXX**, and the whole moon slowly pulses blue.
+
+1. Join MoonLamp-XXXX from your phone. The setup page should pop up by
+   itself; if not, open `http://192.168.4.1`.
+2. Tap **Find networks**, pick your home network (2.4 GHz only), enter the
+   password and tap **Connect**.
+3. Once the lamp has joined, the page shows its new address, with a Copy
+   button, and counts down 20 seconds, then the setup network closes and your device goes back
+   to your home Wi-Fi. In a normal browser tab the page then moves to
+   **http://moon.local** by itself. The small pop-up window that phones and
+   Macs open for setup pages closes when the Wi-Fi changes instead, so open
+   that address yourself (or the numbered address the page shows, which
+   also works on phones that can't open `.local` names).
+
+If the lamp can't reach your Wi-Fi for a minute (a new router, a changed
+password), MoonLamp-XXXX opens again so you can fix it, while the lamp keeps
+trying the saved network. The setup network has no password, and the lamp
+never shows the saved Wi-Fi password on its page.
+
+## The web page
+
+The page opens on tonight's moon, drawn the way the lamp shows it.
+
+- **See other nights** by dragging the moon, tapping the arrows beside it,
+  or tapping the month strip underneath (one dot per night, as bright as
+  that night's moon, with tonight circled). The lamp follows. Then choose **Keep this phase** to show that
+  phase all the time, or **Back to tonight**. **Play a month** runs through
+  a whole month in 30 seconds.
+- **Power button**: turns the lamp on or off. With a schedule, this lasts
+  until the next scheduled change; turning on while it's scheduled off
+  lasts up to 4 hours.
+- **Brightness** dims the whole moon, lit side and glow together.
+- **Moonlight**: Cool, Moon, Warm and Harvest whites, the themes Blood moon,
+  Jupiter, Nebula, Rainbow and Aurora (which can move gently), or Custom to
+  set the warmth or mix the white and colour LEDs yourself.
+- **Dark side**: no glow, or a glow in Ember, Red, Earthshine, Night blue,
+  Violet or your own colour.
+
+The rest is a tap away:
+
+- **Schedule and location**: turn on and off by itself at sunset, sunrise or
+  set times (with an offset such as 30 minutes before sunset), with a fade.
+  Sunrise and sunset need the lamp's latitude and longitude, pasted in
+  once; the time zone comes from the phone or computer you open the page on.
+  The lamp works out sunrise and sunset itself, to within a minute or two.
+- **Dark side glow**: its strength compared with the lit side, and whether
+  to show it only around sunrise and sunset, like earthshine on the real
+  moon.
+- **Calibrate LEDs**, **Wi-Fi** and **Lamp** (network name, how phases are
+  drawn, the switch-on sweep, defaults, restart).
+
+Changes show on the moon straight away and save themselves a moment later.
+Saved settings live in `settings.json` on the board and take priority over
+the defaults at the top of `lamp.py`.
 
 ## Setting it up for your moon
 
-Connect over USB, press Ctrl-C in the Thonny Shell to stop the program, and
-use these helpers:
+Use **Calibrate LEDs** on the page:
+
+- **LEDs on strip**: the number of LEDs on your piece of strip.
+- **Light one LED**: step through them to see which chamber each one is in,
+  then list each chamber's LEDs, left to right as you face the moon. Leave
+  out any LED that sits under a baffle wall and lights two chambers at once.
+- **Chamber brightness**: every chamber is given the same total light
+  regardless of how many LEDs it has; these sliders correct what is left by
+  eye, against a full moon.
+
+### From Thonny
+
+Connect over USB and press Ctrl-C in the Thonny Shell to stop the program.
+These helpers still work:
 
 | Command | What it does |
 |---|---|
@@ -57,26 +126,11 @@ use these helpers:
 | `show(0.5)` | Shows a phase: 0 new, 0.25 first quarter, 0.5 full, 0.75 last |
 | `demo()` | Sweeps through a whole month in 30 seconds |
 | `startup_sweep()` | Replays the power-on sweep |
-| `run()` | Goes back to showing the real phase |
+| `run()` | Goes back to showing the real phase, with the web page |
 
-Then edit the settings at the top of `main.py`:
-
-- **`CHAMBERS`** lists the LEDs in each chamber, left to right as you face
-  the moon. Leave out any LED that sits under a baffle wall and lights two
-  chambers at once.
-- **`GAIN`** trims each chamber's brightness. Every chamber is given the same
-  total light regardless of how many LEDs it has; `GAIN` corrects what is
-  left by eye. Check with `show(0.5)`.
-- **`BRIGHTNESS`** sets the overall level.
-- **`DARK_COLOR`** and **`DARK_BRIGHTNESS`** control the glow on the unlit
-  side. Set the brightness to 0 to turn it off.
-- **`SWEEP_STEP_S`** sets the speed of the power-on sweep. 0 skips it.
-- **`SMOOTH_EDGE`** fades the chamber at the shadow edge; set it to `False`
-  for hard steps like the original toy.
-- **`NORTHERN_HEMISPHERE`** flips which side is lit.
-
-Values typed in the Shell apply until the next restart, which makes it easy
-to experiment before saving them in the file.
+Settings can be tried in the Shell too, for example `lamp.BRIGHTNESS = 0.5`
+then `show(0.5)`. They apply until the next restart. After changing
+`lamp.NUM_LEDS`, `lamp.CHAMBERS` or `lamp.LED0_ON_LEFT`, run `lamp.rebuild()`.
 
 ## How it works
 
@@ -88,6 +142,8 @@ to experiment before saving them in the file.
 - The clock is set over Wi-Fi at start-up and re-synced twice a day. If Wi-Fi
   drops while it is running, the lamp carries on with its own clock.
 - A single dim blue LED means it is waiting for Wi-Fi or internet time.
+- The whole moon pulsing blue means the setup network is open and the lamp
+  doesn't know the time yet: join MoonLamp-XXXX to set it up.
 
 ## Prior art
 
