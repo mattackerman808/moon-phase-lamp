@@ -13,6 +13,7 @@
 #   chamber(0)   light one whole chamber, 0 = leftmost ... 5 = rightmost
 #   show(0.5)    display a phase: 0 new, 0.25 first quarter, 0.5 full, 0.75 last
 #   demo()       sweep through a whole month in 30 seconds
+#   startup_sweep()  replay the power-on sweep
 #   run()        go back to showing the real phase
 
 import time
