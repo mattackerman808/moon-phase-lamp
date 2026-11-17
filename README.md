@@ -16,12 +16,20 @@ sunset, sunrise or set times.
 
 ## Parts
 
+<img src="docs/parts/esp32-devkit.jpg" align="right" width="260" alt="An ESP32 development board with an ESP-WROOM-32 module, a CP2102 USB chip and a USB-C port">
+
 - Uncle Milton Moon in My Room
-- ESP32 development board (a classic ESP-WROOM-32 DevKit works well)
-- SK6812 **RGBW** addressable LED strip, 5 V, 144 LEDs/m, IP30
-  (about 20 cm is used; natural white on a white PCB suits the housing)
-- Three jumper wires
+- [ESP32 development board](https://www.amazon.com/dp/B0DF2YJSHN):
+  a classic ESP-WROOM-32 DevKit with a CP2102 USB chip and USB-C, like the
+  one pictured
+- [SK6812 **RGBW** addressable LED strip](https://www.amazon.com/dp/B01N0MA316),
+  5 V, 144 LEDs/m, IP30 (about 20 cm is used; natural white on a white PCB
+  suits the housing)
+- [Three jumper wires](https://www.amazon.com/dp/B0BRTJQGS6)
 - USB cable and a 5 V USB power adapter
+
+The links are to the parts used for this build; similar parts work too.
+Board photo from its Amazon listing.
 
 ## How the toy is built
 
