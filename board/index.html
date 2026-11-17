@@ -88,6 +88,7 @@ nav.more button::after{content:"›";color:var(--haze)}
 .sheet.open{visibility:visible;transform:none;transition:transform .28s ease}
 .sheet header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 10px;background:var(--night)}
 .sheet h2{font:400 27px/1.2 var(--serif);margin:0}
+.sheet h2:focus{outline:none}
 .field{padding:14px 0;border-bottom:1px solid var(--rim)}
 .field:last-child{border-bottom:0}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -178,7 +179,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Schedule and location -->
 <section class="sheet" id="sheet-schedule" aria-labelledby="h-schedule"><div class="sheet-in">
-  <header><h2 id="h-schedule">Schedule and location</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-schedule" tabindex="-1">Schedule and location</h2><button class="pill" data-close>Done</button></header>
   <div class="field"><label class="check"><span>Turn on and off by itself</span><input type="checkbox" id="sched"></label></div>
   <div id="schedOpts">
     <div class="field"><div class="row"><span>Turn on at</span><span class="inline"><select id="onKind"><option value="sunset">Sunset</option><option value="sunrise">Sunrise</option><option value="time">A set time</option></select><input type="time" id="onTime"></span></div>
@@ -202,7 +203,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Dark side glow -->
 <section class="sheet" id="sheet-glow" aria-labelledby="h-glow"><div class="sheet-in">
-  <header><h2 id="h-glow">Dark side glow</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-glow" tabindex="-1">Dark side glow</h2><button class="pill" data-close>Done</button></header>
   <div class="field"><label class="check"><span>Glow on the dark side</span><input type="checkbox" id="glowOn"></label></div>
   <div id="glowOpts">
     <div class="field"><div class="row"><label for="glowStr">Strength, compared with the lit side</label><output id="glowStrOut"></output></div><input type="range" id="glowStr" min="0" max="1" step="0.01"></div>
@@ -217,7 +218,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Moonlight colour -->
 <section class="sheet" id="sheet-colour" aria-labelledby="h-colour"><div class="sheet-in">
-  <header><h2 id="h-colour">Moonlight colour</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-colour" tabindex="-1">Moonlight colour</h2><button class="pill" data-close>Done</button></header>
   <div class="field"><div class="row"><label for="warmth">Warmth</label><output id="warmthOut"></output></div><input type="range" id="warmth" min="0" max="1" step="0.01">
     <p class="hint">From bluish cool white, through the plain white LED, to amber.</p></div>
   <div class="field"><span class="label">Mix it yourself</span>
@@ -228,7 +229,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Calibrate -->
 <section class="sheet" id="sheet-calibrate" aria-labelledby="h-calibrate"><div class="sheet-in">
-  <header><h2 id="h-calibrate">Calibrate LEDs</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-calibrate" tabindex="-1">Calibrate LEDs</h2><button class="pill" data-close>Done</button></header>
   <div class="field"><div class="row"><label for="numLeds">LEDs on the strip</label><input type="number" id="numLeds" min="1" max="300"></div></div>
   <div class="field"><div class="row"><span>Light one LED</span><span class="inline"><button class="pill" id="ledM" aria-label="Previous LED">−</button><input type="number" id="led" min="0" value="0" aria-label="LED number"><button class="pill" id="ledP" aria-label="Next LED">+</button></span></div>
     <p class="hint">Step through the LEDs and note which chamber each one lights. Leave out any LED under a wall between chambers.</p></div>
@@ -240,7 +241,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Wi-Fi -->
 <section class="sheet" id="sheet-wifi" aria-labelledby="h-wifi"><div class="sheet-in">
-  <header><h2 id="h-wifi">Wi-Fi</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-wifi" tabindex="-1">Wi-Fi</h2><button class="pill" data-close>Done</button></header>
   <div class="done-box" id="doneBox" hidden>
     <h3>Connected</h3>
     <p style="margin:0">The lamp is on <b id="dSsid"></b>. From now on its page is at <a id="dHome"></a> (or <a id="dIp"></a>).</p>
@@ -261,7 +262,7 @@ input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--rim)
 
 <!-- Lamp -->
 <section class="sheet" id="sheet-lamp" aria-labelledby="h-lamp"><div class="sheet-in">
-  <header><h2 id="h-lamp">Lamp</h2><button class="pill" data-close>Done</button></header>
+  <header><h2 id="h-lamp" tabindex="-1">Lamp</h2><button class="pill" data-close>Done</button></header>
   <div class="field"><label class="label" for="host">Name on the network</label><input type="text" id="host" autocapitalize="off" spellcheck="false"><p class="hint">The page will be at http://<i>name</i>.local after a restart.</p></div>
   <div class="field"><label class="check"><span>Soft shadow edge</span><input type="checkbox" id="smooth"></label><p class="hint" style="margin-top:0">Off switches chambers fully on or off, like the original toy.</p></div>
   <div class="field"><label class="check"><span>Southern hemisphere</span><input type="checkbox" id="south"></label></div>
@@ -648,7 +649,7 @@ function openSheet(name) {
   const s = $('#sheet-' + name); if (!s) return;
   if (name === 'calibrate' || name === 'lamp' || name === 'schedule') fill();
   s.classList.add('open'); s.scrollTop = 0;
-  setTimeout(() => s.querySelector('[data-close]').focus({preventScroll: true}), 50);
+  setTimeout(() => s.querySelector('h2').focus({preventScroll: true}), 50);   // for screen readers
 }
 function closeSheets() { $$('.sheet.open').forEach(s => s.classList.remove('open')); }
 document.addEventListener('click', e => {
