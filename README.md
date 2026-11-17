@@ -25,7 +25,8 @@ sunset, sunrise or set times.
 - [SK6812 **RGBW** addressable LED strip](https://www.amazon.com/dp/B01N0MA316),
   5 V, 144 LEDs/m, IP30 (about 20 cm is used; natural white on a white PCB
   suits the housing)
-- [Three jumper wires](https://www.amazon.com/dp/B0BRTJQGS6)
+- [Three jumper wires](https://www.amazon.com/dp/B0BRTJQGS6), female to
+  female, 20 cm (the pack has 40; only three are needed)
 - USB cable and a 5 V USB power adapter
 
 The links are to the parts used for this build; similar parts work too.
