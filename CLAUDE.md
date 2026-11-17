@@ -17,6 +17,7 @@ On the device, use `mpremote` (installed with `uv tool install mpremote`). The b
 - Restart and read the start-up output: open the port with pyserial (mpremote's own Python, under `uv tool dir`), pulse RTS, and read for about 20 s. On this board, merely opening the port can also reset it.
 - Once the lamp is on Wi-Fi, drive it over HTTP instead (`curl http://moon.local/api/state`). This doesn't interrupt anything.
 - Screenshot the page: Playwright's headless Chromium is in `~/Library/Caches/ms-playwright/chromium_headless_shell-*`. Run it with `--headless --screenshot=out.png --window-size=390,900 --virtual-time-budget=5000 http://127.0.0.1:8765/#schedule` against the CPython test server.
+- README screenshots (`docs/screenshots/`) come from that test server, not the real lamp, so no personal network or location shows. They use a London location (51.5, -0.13), Chromium run with `TZ=Europe/London`, `--force-device-scale-factor=2` at 390×844, and are then resized to 520 px wide.
 - Factory-reset Wi-Fi: delete `settings.json` on the board and reset it.
 
 The README still describes Thonny for end users, where the helpers re-exported by `main.py` (`walk()`, `chamber(j)`, `show(p)`, `demo()`, `startup_sweep()`, `run()`) are called from the Shell after Ctrl-C.

@@ -10,6 +10,10 @@ the colour of the moon, a glow on its dark side, themes, a fixed phase if
 you'd rather always have a full moon, and turning on and off by itself at
 sunset, sunrise or set times.
 
+| Tonight's moon | Themes | Schedule | Wi-Fi setup |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/1-home.png" width="200" alt="The lamp's page showing a first quarter moon, the month strip, the power button and brightness"> | <img src="docs/screenshots/2-jupiter.png" width="200" alt="The page with the Jupiter theme, kept at full moon"> | <img src="docs/screenshots/3-schedule.png" width="200" alt="The schedule panel: on 30 minutes before sunset, off at sunrise, with today's sunrise and sunset times"> | <img src="docs/screenshots/4-setup.png" width="200" alt="The Wi-Fi setup panel listing nearby networks"> |
+
 ## Parts
 
 - Uncle Milton Moon in My Room
