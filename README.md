@@ -16,9 +16,14 @@ sunset, sunrise or set times.
 
 ## Parts
 
-<img src="docs/parts/esp32-devkit.jpg" align="right" width="260" alt="An ESP32 development board with an ESP-WROOM-32 module, a CP2102 USB chip and a USB-C port">
+<p>
+  <img src="docs/parts/moon-in-my-room.jpg" height="220" alt="The Uncle Milton Moon in My Room toy, a wall moon with its remote">
+  &nbsp;&nbsp;
+  <img src="docs/parts/esp32-devkit.jpg" height="220" alt="An ESP32 development board with an ESP-WROOM-32 module, a CP2102 USB chip and a USB-C port">
+</p>
 
-- Uncle Milton Moon in My Room
+- [Uncle Milton Moon in My Room](https://www.amazon.com/dp/B071NM2DZB)
+  (its remote isn't needed)
 - [ESP32 development board](https://www.amazon.com/dp/B0DF2YJSHN):
   a classic ESP-WROOM-32 DevKit with a CP2102 USB chip and USB-C, like the
   one pictured
@@ -30,7 +35,7 @@ sunset, sunrise or set times.
 - USB cable and a 5 V USB power adapter
 
 The links are to the parts used for this build; similar parts work too.
-Board photo from its Amazon listing.
+Photos from the Amazon listings.
 
 ## How the toy is built
 
